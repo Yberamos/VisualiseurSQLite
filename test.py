@@ -45,8 +45,6 @@ class App(QWidget):
         #Column count 
         tableWidget.setColumnCount(len(columns))   
 
-        #self.tableWidget.setItem(0,0, QTableWidgetItem(columns[0]))
-        
         i = 0
         for column in columns:
             tableWidget.setItem(0,i, QTableWidgetItem(column))
@@ -59,6 +57,7 @@ class App(QWidget):
             i = i + 1
  
         #Table will fit the screen horizontally 
+        # TODO: those ligne does nothing, how to auto stretch?
         tableWidget.horizontalHeader().setStretchLastSection(True) 
         tableWidget.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch) 
         
