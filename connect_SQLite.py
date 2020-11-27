@@ -2,8 +2,19 @@ import sqlite3
 import os
 
 
-class DbNotExist(Exception):
+class SQLiteConnectionError(Exception):
+    """Base class for connection execption"""
+
+    def __init__(self):
+        self.message = 'Connection error: '
+
+
+class DbNotExist(SQLiteConnectionError):
     """Error class if database does not exist"""
+
+    def __init__(self):
+        super().__init__()
+        self.message = self.message + 'The file specified does not exist'
 
 
 class Connection():
@@ -27,13 +38,13 @@ class Connection():
         self.create_cursor()
 
     def __del__(self):
-        if self.db_cursor:
+        if hasattr(self, 'db_cursor'):
             try:
                 self.db_cursor.close()
             except sqlite3.Error as error:
                 print('Error while closing cursor: ', error)
 
-        if self.db_link:
+        if hasattr(self, 'db_link'):
             self.disconnect_from_db()
 
     def connect_to_db(self, db_path):  # TODO: return value if error
@@ -45,9 +56,11 @@ class Connection():
 
         except sqlite3.Error as error:
             print('Error while connecting to sqlite: ', error)
+            raise
 
-        except DbNotExist:
-            print('Error while connecting to sqlite: File does not exist')
+        except DbNotExist as error:
+            print('Error while connecting to sqlite: ', error.message)
+            raise
 
     def create_cursor(self):  # TODO: return value if error
         try:
