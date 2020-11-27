@@ -6,7 +6,7 @@ class DbNotExist(Exception):
     """Error class if database does not exist"""
 
 
-class MyConnection():
+class Connection():
 
     def __enter__(self):
         return self

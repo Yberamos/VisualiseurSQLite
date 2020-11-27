@@ -1,4 +1,4 @@
-from my_sqlite3 import MyConnection
+from connect_SQLite import Connection
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 import sys
@@ -40,7 +40,7 @@ class App(QWidget):
         self.db_path = self.textbox.text()
         tables = []
 
-        with MyConnection(self.db_path) as db:
+        with Connection(self.db_path) as db:
             tables_sgbd = db.get_tablesnames()
         for tableName in tables_sgbd:
             tables.append(self.createTable(tableName))
@@ -58,7 +58,7 @@ class App(QWidget):
 
 
     def createTable(self, tableName):
-        with MyConnection(self.db_path) as db:
+        with Connection(self.db_path) as db:
             records = db.read_from_cursor('SELECT * FROM '+tableName)
             columns = db.get_columns(tableName)
 
