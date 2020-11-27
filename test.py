@@ -1,70 +1,114 @@
 from my_sqlite3 import MyConnection
 from PyQt5.QtWidgets import *
+from PyQt5.QtCore import *
 import sys
+from math import sqrt
 
 
-
-#Main Window 
-class App(QWidget): 
-    def __init__(self, db_path): 
-        super().__init__() 
-        self.title = 'PyQt5 - QTableWidget'
+# Main Window
+class App(QWidget):
+    def __init__(self):
+        super().__init__()
+        self.title = 'Visualiseur SQLite'
         self.left = 0
         self.top = 0
-        self.width = 500
-        self.height = 700
-        self.tables = []
-        self.setWindowTitle(self.title) 
-        self.setGeometry(self.left, self.top, self.width, self.height) 
-        with MyConnection(db_path) as db:
-            tables_sgbd = db.get_tablesnames()
+        self.width = 800
+        self.height = 600
         
-        for tableName in tables_sgbd:
-            self.tables.append(self.createTable(tableName))
-   
-        self.layout = QVBoxLayout() 
+        self.setWindowTitle(self.title)
+        self.setGeometry(self.left, self.top, self.width, self.height)
+        self.new_height = 0
+        self.layout = QGridLayout()
 
-        for table in self.tables:
-            self.layout.addWidget(table) 
-        self.setLayout(self.layout) 
-   
-        #Show window 
-        self.show() 
-   
-    #Create table 
-    def createTable(self, tableName): 
-        with MyConnection(db_path) as db:
+        # Create textbox
+        self.textbox = QLineEdit(self)
+        self.textbox.move(20 ,  20)
+        self.textbox.resize(280, 40)
+
+        # Create a button in the window
+        self.button = QPushButton('Load tables', self)
+        self.button.move(20, 80)
+
+        # connect button to function on_click
+        self.button.clicked.connect(self.on_click)
+
+        # Show window
+        self.show()
+
+    def on_click(self):
+        self.textbox.setText("../SQLite/meals.db")
+        self.db_path = self.textbox.text()
+        tables = []
+
+        with MyConnection(self.db_path) as db:
+            tables_sgbd = db.get_tablesnames()
+        for tableName in tables_sgbd:
+            tables.append(self.createTable(tableName))
+
+        
+        nbLigne = int(sqrt(len(tables)))
+        nbColone = len(tables) - nbLigne
+        positions = [(i, j) for i in range(nbLigne) for j in range(nbColone)]
+
+        for position, table in enumerate(tables):
+            self.layout.addWidget(table, positions[position][0],positions[position][1] )
+        self.setLayout(self.layout)
+
+        #self.resize(self.width,self.new_height )
+
+
+    def createTable(self, tableName):
+        with MyConnection(self.db_path) as db:
             records = db.read_from_cursor('SELECT * FROM '+tableName)
             columns = db.get_columns(tableName)
 
-        tableWidget = QTableWidget() 
-  
-        #Row count 
-        tableWidget.setRowCount(len(records)+1)  
-  
-        #Column count 
-        tableWidget.setColumnCount(len(columns))   
+        tableWidget = QTableWidget()
+
+        # Row count
+        tableWidget.setRowCount(len(records)+1)
+
+        # Column count
+        tableWidget.setColumnCount(len(columns))
 
         i = 0
         for column in columns:
-            tableWidget.setItem(0,i, QTableWidgetItem(column))
+            tableWidget.setItem(0, i, QTableWidgetItem(column))
             j = 1
             for record in records:
-                print(type(record[i]))
-                tableWidget.setItem(j,i, QTableWidgetItem(str(record[i])))
+                tableWidget.setItem(j, i, QTableWidgetItem(str(record[i])))
                 j = j + 1
-            
+
             i = i + 1
- 
-        #Table will fit the screen horizontally 
+
+        # Table will fit the screen horizontally
         # TODO: those ligne does nothing, how to auto stretch?
-        tableWidget.horizontalHeader().setStretchLastSection(True) 
-        tableWidget.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch) 
+
+        # self.new_height = self.new_height + ((len(records)+1)*100) + 10
         
+        header = tableWidget.horizontalHeader()       
+        header.setSectionResizeMode(0, QHeaderView.Stretch)
+        #header.setSectionResizeMode(1, QHeaderView.ResizeToContents)
+        #header.setSectionResizeMode(2, QHeaderView.ResizeToContents)
+        tableWidget.setFixedHeight(100)
+
+        """
+        tableWidget.setColumnWidth(1, 80)
+        header = tableWidget.verticalHeader()
+        header.setSectionResizeMode(0, QHeaderView.Stretch)
+        header.setStretchLastSection(True)
+        
+
+        v_header = tableWidget.verticalHeader()
+        v_header.setSectionResizeMode(QHeaderView.ResizeToContents)       
+        v_header.setSectionResizeMode(0, QHeaderView.Stretch)"""
+        #tableWidget.resize(len(columns)*20 ,((len(records)+1)*50))
+        #tableWidget.resize(20, 20)
+        #tableWidget.verticalHeader().setSectionResizeMode(QHeaderView.Stretch)
+
         return tableWidget
-   
-if __name__ == '__main__': 
-    db_path='../SQLite/meals.db'
-    app = QApplication(sys.argv) 
-    ex = App(db_path) 
-    sys.exit(app.exec_()) 
+
+
+if __name__ == '__main__':
+    app = QApplication(sys.argv)
+    ex = App()
+    sys.exit(app.exec_())

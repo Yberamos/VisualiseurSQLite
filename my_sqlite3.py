@@ -9,7 +9,6 @@ class DbNotExist(Exception):
 class MyConnection():
 
     def __enter__(self):
-        print('__enter__ called')
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
