@@ -3,6 +3,8 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 import sys
 from math import sqrt
+from logging.handlers import RotatingFileHandler
+import logging
 
 
 # Main Window
@@ -44,8 +46,10 @@ class Visualiseur(QWidget):
         try:
             with Connection(self.db_path) as db:
                 tables_sgbd = db.get_tablesnames()
+            log.info('Tables loaded from file ' + self.db_path)
         except SQLiteConnectionError as error:
             self.textbox.setText(error.message)
+            log.error(error.message)
 
         if tables_sgbd is not None:
             for tableName in tables_sgbd:
@@ -94,6 +98,14 @@ class Visualiseur(QWidget):
 
 
 if __name__ == '__main__':
+    log = logging.getLogger('Visualiseur')
+    handler = RotatingFileHandler('./Visualisor_log.log')
+    formater = logging.Formatter(
+        '%(asctime)s :: %(levelname)s :: %(message)s', '%Y-%m-%d %H:%M:%S')
+    log.setLevel(logging.INFO)
+    handler.setFormatter(formater)
+    log.addHandler(handler)
+
     app = QApplication(sys.argv)
     ex = Visualiseur()
     sys.exit(app.exec_())
