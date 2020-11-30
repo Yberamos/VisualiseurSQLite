@@ -1,6 +1,5 @@
 from connect_SQLite import Connection, SQLiteConnectionError
-from PyQt5.QtWidgets import *
-from PyQt5.QtCore import *
+from PyQt5.QtWidgets import QGridLayout, QLineEdit, QPushButton, QTableWidget, QTableWidgetItem, QHeaderView, QWidget, QApplication
 import sys
 from math import sqrt
 from logging.handlers import RotatingFileHandler
@@ -24,18 +23,19 @@ class Visualiseur(QWidget):
 
         # Create textbox
         self.textbox = QLineEdit(self)
-        self.textbox.move(20,  20)
+        self.layout.addWidget(self.textbox, 0, 0)
         self.textbox.resize(280, 40)
 
         # Create a button in the window
         self.button = QPushButton('Load tables', self)
-        self.button.move(20, 80)
+        self.layout.addWidget(self.button, 0, 1)
         self.textbox.setText("../SQLite/meals.db")
 
         # connect button to function on_click
         self.button.clicked.connect(self.on_click)
 
         # Show window
+        self.setLayout(self.layout)
         self.show()
 
     def on_click(self):
@@ -43,6 +43,7 @@ class Visualiseur(QWidget):
         tables = []
         tables_sgbd = None
 
+        #Loading tables from SQLite
         try:
             with Connection(self.db_path) as db:
                 tables_sgbd = db.get_tablesnames()
@@ -51,20 +52,20 @@ class Visualiseur(QWidget):
             self.textbox.setText(error.message)
             log.error(error.message)
 
+        # creating the tables and adding them to the laoyt
         if tables_sgbd is not None:
             for tableName in tables_sgbd:
                 tables.append(self.createTable(tableName))
             nbLigne = int(sqrt(len(tables)))
             nbColone = len(tables) - nbLigne
-            positions = [(i, j) for i in range(nbLigne)
-                         for j in range(nbColone)]
+            positions = [(i, j) for i in range(1 , nbLigne +1)
+                         for j in range(0, nbColone )]
 
             for position, table in enumerate(tables):
                 self.layout.addWidget(
                     table, positions[position][0], positions[position][1])
             self.setLayout(self.layout)
 
-        #self.resize(self.width,self.new_height )
 
     def createTable(self, tableName):
         with Connection(self.db_path) as db:
@@ -73,31 +74,36 @@ class Visualiseur(QWidget):
 
         tableWidget = QTableWidget()
 
-        # Row count
-        tableWidget.setRowCount(len(records)+1)
-
-        # Column count
+        tableWidget.setRowCount(len(records))
         tableWidget.setColumnCount(len(columns))
 
-        i = 0
-        for column in columns:
-            tableWidget.setItem(0, i, QTableWidgetItem(column))
-            j = 1
-            for record in records:
+        tableWidget.setHorizontalHeaderLabels(columns)
+
+        # Populate the table
+        for i in range(len(columns)):
+            for j, record in enumerate(records):
                 tableWidget.setItem(j, i, QTableWidgetItem(str(record[i])))
-                j = j + 1
 
-            i = i + 1
 
-        # TODO: those ligne does nothing, how to auto stretch?
-        header = tableWidget.horizontalHeader()
-        header.setSectionResizeMode(0, QHeaderView.Stretch)
-        tableWidget.setFixedHeight(100)
+        # Set width
+        header = tableWidget.horizontalHeader()       
+        for position in range(len(columns)-1):
+            header.setSectionResizeMode(position, QHeaderView.ResizeToContents)
+        
+        
+        #Set fix height
+        if len(records) != 0:
+            height = (50*len(records))
+        else:
+            height = 50
+
+        tableWidget.setFixedHeight(height)
 
         return tableWidget
 
 
 if __name__ == '__main__':
+    # Start logger
     log = logging.getLogger('Visualiseur')
     handler = RotatingFileHandler('./Visualisor_log.log')
     formater = logging.Formatter(
