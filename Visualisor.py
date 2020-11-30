@@ -10,6 +10,14 @@ import logging
 class Visualiseur(QWidget):
     def __init__(self):
         super().__init__()
+        # Start logger
+        self.log = logging.getLogger('Visualiseur')
+        handler = RotatingFileHandler('./Visualisor_log.log')
+        formater = logging.Formatter(
+            '%(asctime)s :: %(levelname)s :: %(message)s', '%Y-%m-%d %H:%M:%S')
+        self.log.setLevel(logging.DEBUG)
+        handler.setFormatter(formater)
+        self.log.addHandler(handler)
         self.title = 'Visualiseur SQLite'
         self.left = 0
         self.top = 0
@@ -36,6 +44,7 @@ class Visualiseur(QWidget):
 
         # Show window
         self.setLayout(self.layout)
+        self.log.debug('Windows initialized')
         self.show()
 
     def on_click(self):
@@ -47,10 +56,10 @@ class Visualiseur(QWidget):
         try:
             with Connection(self.db_path) as db:
                 tables_sgbd = db.get_tablesnames()
-            log.info('Tables loaded from file ' + self.db_path)
+            self.log.info('Tables loaded from file ' + self.db_path)
         except SQLiteConnectionError as error:
             self.textbox.setText(error.message)
-            log.error(error.message)
+            self.log.error(error.message)
 
         # creating the tables and adding them to the laoyt
         if tables_sgbd is not None:
@@ -98,19 +107,13 @@ class Visualiseur(QWidget):
             height = 50
 
         tableWidget.setFixedHeight(height)
-
+        self.log.debug('Table headers: ' + ', '.join(map(str, columns)))
+        self.log.debug('Table records: ' + ', '.join(map(str, records)))
         return tableWidget
 
 
 if __name__ == '__main__':
-    # Start logger
-    log = logging.getLogger('Visualiseur')
-    handler = RotatingFileHandler('./Visualisor_log.log')
-    formater = logging.Formatter(
-        '%(asctime)s :: %(levelname)s :: %(message)s', '%Y-%m-%d %H:%M:%S')
-    log.setLevel(logging.INFO)
-    handler.setFormatter(formater)
-    log.addHandler(handler)
+    
 
     app = QApplication(sys.argv)
     ex = Visualiseur()
