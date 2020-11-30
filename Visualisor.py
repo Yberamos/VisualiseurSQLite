@@ -1,9 +1,13 @@
-from connect_SQLite import Connection, SQLiteConnectionError
-from PyQt5.QtWidgets import QGridLayout, QLineEdit, QPushButton, QTableWidget, QTableWidgetItem, QHeaderView, QWidget, QApplication
-import sys
-from math import sqrt
-from logging.handlers import RotatingFileHandler
 import logging
+import sys
+from logging.handlers import RotatingFileHandler
+from math import sqrt
+
+from PyQt5.QtWidgets import (QApplication, QGridLayout, QHeaderView, QLineEdit,
+                             QPushButton, QTableWidget, QTableWidgetItem,
+                             QWidget)
+
+from connect_SQLite import Connection, SQLiteConnectionError
 
 
 # Main Window
@@ -15,7 +19,7 @@ class Visualiseur(QWidget):
         handler = RotatingFileHandler('./Visualisor_log.log')
         formater = logging.Formatter(
             '%(asctime)s :: %(levelname)s :: %(message)s', '%Y-%m-%d %H:%M:%S')
-        self.log.setLevel(logging.DEBUG)
+        self.log.setLevel(logger_level)
         handler.setFormatter(formater)
         self.log.addHandler(handler)
         self.title = 'Visualiseur SQLite'
@@ -52,7 +56,7 @@ class Visualiseur(QWidget):
         tables = []
         tables_sgbd = None
 
-        #Loading tables from SQLite
+        # Loading tables from SQLite
         try:
             with Connection(self.db_path) as db:
                 tables_sgbd = db.get_tablesnames()
@@ -67,14 +71,13 @@ class Visualiseur(QWidget):
                 tables.append(self.createTable(tableName))
             nbLigne = int(sqrt(len(tables)))
             nbColone = len(tables) - nbLigne
-            positions = [(i, j) for i in range(1 , nbLigne +1)
-                         for j in range(0, nbColone )]
+            positions = [(i, j) for i in range(1, nbLigne + 1)
+                         for j in range(0, nbColone)]
 
             for position, table in enumerate(tables):
                 self.layout.addWidget(
                     table, positions[position][0], positions[position][1])
             self.setLayout(self.layout)
-
 
     def createTable(self, tableName):
         with Connection(self.db_path) as db:
@@ -93,14 +96,12 @@ class Visualiseur(QWidget):
             for j, record in enumerate(records):
                 tableWidget.setItem(j, i, QTableWidgetItem(str(record[i])))
 
-
         # Set width
-        header = tableWidget.horizontalHeader()       
+        header = tableWidget.horizontalHeader()
         for position in range(len(columns)-1):
             header.setSectionResizeMode(position, QHeaderView.ResizeToContents)
-        
-        
-        #Set fix height
+
+        # Set fix height
         if len(records) != 0:
             height = (50*len(records))
         else:
@@ -113,8 +114,7 @@ class Visualiseur(QWidget):
 
 
 if __name__ == '__main__':
-    
-
+    logger_level = logging.DEBUG
     app = QApplication(sys.argv)
     ex = Visualiseur()
     sys.exit(app.exec_())

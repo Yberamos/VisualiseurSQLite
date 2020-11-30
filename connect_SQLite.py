@@ -1,7 +1,5 @@
-import sqlite3
 import os
-
-# TODO: add more exception to raise when sqlite3.Error is raised
+import sqlite3
 
 
 class SQLiteConnectionError(Exception):
@@ -51,7 +49,7 @@ class Connection():
         if hasattr(self, 'db_link'):
             self.disconnect_from_db()
 
-    def connect_to_db(self, db_path):  # TODO: return value if error
+    def connect_to_db(self, db_path):
         try:
             if os.path.isfile(db_path):
                 self.db_link = sqlite3.connect(db_path)
@@ -65,7 +63,7 @@ class Connection():
         except DbNotExist as error:
             raise
 
-    def create_cursor(self):  # TODO: return value if error
+    def create_cursor(self):
         try:
             self.db_cursor = self.db_link.cursor()
         except sqlite3.Error as error:
@@ -83,21 +81,21 @@ class Connection():
 
         return querry_result
 
-    def write_to_cursor(self, sql_query, sql_values=tuple()):  # TODO: return value
+    def write_to_cursor(self, sql_query, sql_values=tuple()):
         try:
             self.db_cursor.execute(sql_query, sql_values)
         except sqlite3.Error as error:
             raise SQLiteConnectionError(
                 'Error while writing to cursor : ' + error.args[0])
 
-    def commit_to_db(self):  # TODO: return value
+    def commit_to_db(self):
         try:
             self.db_link.commit()
         except sqlite3.Error as error:
             raise SQLiteConnectionError(
                 'Error while commiting cursor to database : ' + error.args[0])
 
-    def get_tablesnames(self):  # TODO: try?
+    def get_tablesnames(self):
         tables = []
         sql_querry = '''
             SELECT 
@@ -109,21 +107,27 @@ class Connection():
                 name NOT LIKE 'sqlite_%'
             '''
 
-        for table in self.read_from_cursor(sql_querry):
-            tables.append(table[0])
+        try:
+            for table in self.read_from_cursor(sql_querry):
+                tables.append(table[0])
+        except sqlite3.Error as error:
+            raise SQLiteConnectionError(error.args[0])
 
         return tables
 
-    def get_columns(self, tableName):  # TODO: try?
+    def get_columns(self, tableName):
         columns = []
         sql_querry = 'PRAGMA table_info(' + tableName + ')'
-        for column in self.read_from_cursor(sql_querry):
-            columns.append(column[1])
-
+        try:
+            for column in self.read_from_cursor(sql_querry):
+                columns.append(column[1])
+        except sqlite3.Error as error:
+            raise SQLiteConnectionError(error.args[0])
         return columns
 
-    def disconnect_from_db(self):  # TODO: return value
+    def disconnect_from_db(self):
         try:
             self.db_link.close()
         except sqlite3.Error as error:
-            print('Error while disconnecting from database: ', error)
+            raise SQLiteConnectionError(
+                'Error while disconnecting from database: ' + error.args[0])
