@@ -29,7 +29,7 @@ class Visualiseur(QWidget):
         self.height = 600
 
         self.setWindowTitle(self.title)
-        self.setGeometry(self.left, self.top, self.width, self.height)
+        #self.setGeometry(self.left, self.top, self.width, self.height)
         self.new_height = 0
         self.layout = QGridLayout()
 
@@ -85,6 +85,7 @@ class Visualiseur(QWidget):
             columns = db.get_columns(tableName)
 
         tableWidget = QTableWidget()
+        tableWidget.setMinimumWidth(350)
 
         tableWidget.setRowCount(len(records))
         tableWidget.setColumnCount(len(columns))
