@@ -5,7 +5,7 @@ from math import sqrt
 
 from PyQt5.QtWidgets import (QApplication, QGridLayout, QHeaderView, QLineEdit,
                              QPushButton, QTableWidget, QTableWidgetItem,
-                             QWidget)
+                             QWidget, QLabel)
 
 from connect_SQLite import Connection, SQLiteConnectionError
 
@@ -53,33 +53,56 @@ class Visualiseur(QWidget):
 
     def on_click(self):
         self.db_path = self.textbox.text()
-        tables = []
-        tables_sgbd = None
+        tables = {}
+        tables_names = None
 
         # Loading tables from SQLite
         try:
             with Connection(self.db_path) as db:
-                tables_sgbd = db.get_tablesnames()
+                tables_names = db.get_tablesnames()
+                
             self.log.info('Tables loaded from file ' + self.db_path)
         except SQLiteConnectionError as error:
             self.textbox.setText(error.message)
             self.log.error(error.message)
 
         # creating the tables and adding them to the laoyt
-        if tables_sgbd is not None:
-            for tableName in tables_sgbd:
-                tables.append(self.createTable(tableName))
-            nbLigne = int(sqrt(len(tables)))
+        if tables_names is not None:
+            for index, tableName in enumerate(tables_names):
+                print(tableName, index +1 )
+                tables[tableName]={}
+                tables[tableName]['widget_table'] = self.createTable(tableName)
+                tables[tableName]['widget_label'] = self.createLabel(tableName)
+                tables[tableName]['index'] = index + 1
+            nbLigne = int(sqrt(len(tables))) 
             nbColone = len(tables) - nbLigne
+            nbLigne = nbLigne *2 
             positions = [(i, j) for i in range(1, nbLigne + 1)
                          for j in range(0, nbColone)]
+            # [(1, 0), (1, 1), (2, 0), (2, 1), (3, 0), (3, 1), (4, 0), (4, 1)]
 
-            for position, table in enumerate(tables):
-                self.layout.addWidget(
-                    table, positions[position][0], positions[position][1])
+            for table in tables:
+                # print('position')
+                index_table = tables[table]['index']
+                index_label = tables[table]['index'] - 1
+                if index_table % 2 == 1:
+                    index_table = index_table * 2
+                else:
+                    index_table = (index_table * 2)-1
+                print(index_table)
+                self.layout.addWidget(tables[table]['widget_table'], positions[index_table][0], positions[index_table][1])
+                #self.layout.addWidget(tables[table]['widget_label'], positions[index_label][0], positions[index_label][1])
+
+
             self.setLayout(self.layout)
 
-    def createTable(self, tableName):
+
+    def createLabel(self, tableName):
+        labelWidget = QLabel()
+        labelWidget.setText(tableName)
+        return labelWidget
+
+    def createTable(self, tableName): # TODO : add labbel with table name
         with Connection(self.db_path) as db:
             records = db.read_from_cursor('SELECT * FROM '+tableName)
             columns = db.get_columns(tableName)
@@ -104,7 +127,7 @@ class Visualiseur(QWidget):
 
         # Set fix height
         if len(records) != 0:
-            height = (50*len(records))
+            height = (30*len(records))
         else:
             height = 50
 
