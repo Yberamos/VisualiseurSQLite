@@ -131,3 +131,13 @@ class Connection():
         except sqlite3.Error as error:
             raise SQLiteConnectionError(
                 'Error while disconnecting from database: ' + error.args[0])
+
+    def save_database(self, name):
+        backup_dir = 'backup'
+        if not os.path.isdir(backup_dir):
+            os.makedirs(backup_dir)
+        date = datetime.datetime.now()
+        hour = date.strftime("%H")
+        source = name
+        backup = backup_dir + '/' + name + '_' + hour
+        shutil.copyfile(source, backup)
