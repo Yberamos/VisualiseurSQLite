@@ -41,7 +41,7 @@ class Visualiseur(QWidget):
         # Create a button in the window
         self.button = QPushButton('Load tables', self)
         self.layout.addWidget(self.button, 0, 1)
-        self.textbox.setText("../SQLite/meals.db")
+        self.textbox.setText("../Labo-Programation/meals.db")
 
         # connect button to function on_click
         self.button.clicked.connect(self.on_click)
